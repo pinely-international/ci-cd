@@ -3,7 +3,13 @@ name: Build & Deploy
 on:
   workflow_call:
     inputs:
-      env_name:
+      ENV_NAME:
+        type: string
+        required: true
+      DEPLOY_DIRECTORY:
+        type: string
+        required: false
+      PM2_PROCESS_NAME:
         type: string
         required: true
     secrets:
@@ -11,6 +17,8 @@ on:
         required: true
       DEPLOY_USERNAME:
         required: true
+      DEPLOY_PORT:
+        required: false
       DEPLOY_SSH_KEY:
         required: true
 
@@ -27,11 +35,50 @@ jobs:
         run: bun install
       - name: Run tests
         run: bun test
-      - name: Deploy
-        uses: appleboy/ssh-action@v1.2.2
+
+      - name: Package with bun pm pack --quiet (capture filename)
+        run: |
+          ARCHIVE=$(bun pm pack --quiet)
+          echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
+          echo "Created archive: $ARCHIVE"
+      - run: |
+          DEPLOY_DIRECTORY="${{ secrets.DEPLOY_DIRECTORY || ("/home/" + secrets.DEPLOY_USERNAME) }}"
+          echo "DEPLOY_DIRECTORY=$DEPLOY_DIRECTORY" >> $GITHUB_ENV
+
+      - name: Copy bundle to remote
+        uses: appleboy/scp-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          debug: true
-          script: ''
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "${{ env.ARCHIVE }}"
+          target: "${{ env.DEPLOY_DIRECTORY }}/releases/"
+
+      - name: Deploy on remote and reload PM2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            DEPLOY_DIR="${{ env.DEPLOY_DIRECTORY }}"
+            RELEASES_DIR="$DEPLOY_DIR/releases"
+
+            ARCHIVE_NAME="${{ env.ARCHIVE }}"
+            PM2_PROCESS_NAME="${{ secrets.PM2_PROCESS_NAME }}"
+
+            cd "$RELEASES_DIR"
+            tar -xzf "$ARCHIVE_NAME"
+            rm "$ARCHIVE_NAME"
+
+            curl -fsSL https://bun.com/install | bash
+
+            SCRIPT_PATH=$(bun --silent -e "console.log(require('./package.json').main)")
+
+            if pm2 describe "$PM2_PROCESS_NAME" >/dev/null 2>&1; then
+              pm2 restart "$PM2_PROCESS_NAME"
+            else
+              pm2 start "bun $SCRIPT_PATH" --name "$PM2_PROCESS_NAME"
+            fi
