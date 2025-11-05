@@ -39,7 +39,7 @@ jobs:
 
       - name: Package with bun pm pack --quiet (capture filename)
         run: |
-          ARCHIVE=$(bun pm pack --quiet)
+          ARCHIVE=$(bun pm pack --quiet | tr -d '\n')
           echo "ARCHIVE=$ARCHIVE" >> $GITHUB_ENV
           echo "Created archive: $ARCHIVE"
 
