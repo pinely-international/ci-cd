@@ -12,15 +12,15 @@ on:
       PM2_PROCESS_NAME:
         type: string
         required: false
-    # secrets:
-    #   DEPLOY_HOST:
-    #     required: true
-    #   DEPLOY_USERNAME:
-    #     required: true
-    #   DEPLOY_PORT:
-    #     required: false
-    #   DEPLOY_SSH_KEY:
-    #     required: true
+    secrets:
+      HOST:
+        required: true
+      USERNAME:
+        required: true
+      PORT:
+        required: false
+      SSH_KEY:
+        required: true
 
 jobs:
   build:
@@ -45,26 +45,26 @@ jobs:
 
       - name: Set DEPLOY_DIRECTORY env
         run: |
-          DEPLOY_DIRECTORY="${{ inputs.DEPLOY_DIRECTORY || format('/home/{0}', secrets.DEPLOY_USERNAME) }}"
+          DEPLOY_DIRECTORY="${{ inputs.DEPLOY_DIRECTORY || format('/home/{0}', secrets.USERNAME) }}"
           echo "DEPLOY_DIRECTORY=$DEPLOY_DIRECTORY" >> $GITHUB_ENV
 
       - name: Copy bundle to remote
         uses: appleboy/scp-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
           source: "${{ env.ARCHIVE }}"
           target: "${{ env.DEPLOY_DIRECTORY }}/releases/"
 
       - name: Deploy on remote and reload PM2
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || '22' }}
           script: |
             set -euo pipefail
 
