@@ -1,0 +1,37 @@
+name: Build & Deploy
+
+on:
+  workflow_call:
+    inputs:
+      env_name:
+        type: string
+        required: true
+    secrets:
+      DEPLOY_HOST:
+        required: true
+      DEPLOY_USERNAME:
+        required: true
+      DEPLOY_SSH_KEY:
+        required: true
+
+jobs:
+  build:
+    name: build-app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install
+      - name: Run tests
+        run: bun test
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          debug: true
+          script: ''
