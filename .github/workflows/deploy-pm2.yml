@@ -83,8 +83,6 @@ jobs:
             tar -xzf "$ARCHIVE_NAME"
             rm -f "$ARCHIVE_NAME"
 
-            curl -fsSL https://bun.sh/install | bash
-
             SCRIPT_PATH=$(bun --silent -e "console.log(require('./package.json').main || '')" || true)
 
             if pm2 describe "$PM2_PROCESS_NAME" >/dev/null 2>&1; then
