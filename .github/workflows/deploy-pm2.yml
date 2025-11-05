@@ -24,9 +24,9 @@ on:
 
 jobs:
   build:
-    environment: ${{ inputs.ENV_NAME }}
     name: build-app
     runs-on: ubuntu-latest
+    environment: ${{ inputs.ENV_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
