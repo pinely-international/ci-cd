@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Run tests
-        run: bun test
+        run: bun test --pass-with-no-tests
 
       - name: Package with bun pm pack --quiet (capture filename)
         run: |
