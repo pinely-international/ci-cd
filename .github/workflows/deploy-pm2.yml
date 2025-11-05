@@ -57,7 +57,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          source: "${{ env.ARCHIVE }} node_modules/*"
+          source: "${{ env.ARCHIVE }},node_modules"
           target: "${{ env.DEPLOY_DIRECTORY }}/releases/"
 
       - name: Deploy on remote and reload PM2
