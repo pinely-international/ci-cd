@@ -1,0 +1,55 @@
+name: "build"
+description: "Checkout, Install, Build and Test"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v5
+
+    - name: Detect package manager
+      id: detect
+      shell: bash
+      run: |
+        if [[ -n "${{ inputs.pm }}" ]]; then
+          echo "pm=${{ inputs.pm }}" >> "$GITHUB_OUTPUT"
+        elif [[ -f "bun.lockb" || -f "bun.lock" || -f "bunfig.toml" ]]; then
+          echo "pm=bun" >> "$GITHUB_OUTPUT"
+        else
+          echo "pm=npm" >> "$GITHUB_OUTPUT"
+        fi
+
+    # --- Conditional Bun setup ---
+    - name: Setup Bun
+      if: steps.detect.outputs.pm == 'bun'
+      uses: oven-sh/setup-bun@v2
+
+    # --- Conditional Node setup (for npm) ---
+    - name: Setup Node.js
+      if: steps.detect.outputs.pm == 'npm'
+      uses: actions/setup-node@v4
+      with:
+        node-version: stable
+
+    - name: Install dependencies
+      run: |
+        if [[ "${{ steps.detect.outputs.pm }}" == "bun" ]]; then
+          bun install --frozen-lockfile --silent
+        else
+          npm ci --silent
+        fi
+
+    - name: Build
+      run: |
+        if [[ "${{ steps.detect.outputs.pm }}" == "bun" ]]; then
+          bun run build
+        else
+          npm run build
+        fi
+
+    - name: Test
+      run: |
+        if [[ "${{ steps.detect.outputs.pm }}" == "bun" ]]; then
+          bun test
+        else
+          npm test
+        fi
