@@ -86,6 +86,7 @@ jobs:
             cd "$RELEASES_DIR"
             tar -xzf "$ARCHIVE_NAME"
             rm -f "$ARCHIVE_NAME"
+            cd package
 
             # Install bun (idempotent) and ensure it is on PATH
             curl -fsSL https://bun.sh/install | bash
