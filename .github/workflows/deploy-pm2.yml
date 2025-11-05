@@ -12,15 +12,15 @@ on:
       PM2_PROCESS_NAME:
         type: string
         required: false
-    secrets:
-      DEPLOY_HOST:
-        required: true
-      DEPLOY_USERNAME:
-        required: true
-      DEPLOY_PORT:
-        required: false
-      DEPLOY_SSH_KEY:
-        required: true
+    # secrets:
+    #   DEPLOY_HOST:
+    #     required: true
+    #   DEPLOY_USERNAME:
+    #     required: true
+    #   DEPLOY_PORT:
+    #     required: false
+    #   DEPLOY_SSH_KEY:
+    #     required: true
 
 jobs:
   build:
