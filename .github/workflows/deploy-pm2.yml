@@ -39,6 +39,12 @@ jobs:
       - name: Run tests
         run: bun test --pass-with-no-tests
 
+      - name: Print only custom environment variables
+        run: |
+          echo "Custom environment variables:"
+          env | grep -v '^GITHUB_' | grep -v '^RUNNER_' | grep -v '^ACTIONS_' | grep -v '^CI='
+          exit
+
       - name: Package with bun pm pack --quiet (capture filename)
         run: |
           ARCHIVE=$(bun pm pack --quiet | tr -d '\n')
